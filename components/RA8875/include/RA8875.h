@@ -73,6 +73,12 @@ uint8_t RA8875_read_register(RA8875_context_t* ctx, uint8_t reg);
 void RA8875_draw_rect(RA8875_context_t* ctx, uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint8_t color, uint8_t filled);
 
 /// <summary>
+/// ADDED BY WISCONSIN RACING. Draws rectangle without color set
+/// </summary>
+void RA8875_draw_rect_fast(RA8875_context_t* ctx, uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2);
+
+
+/// <summary>
 /// Draws a data directly to the screen in a linear fashion, not in a rectangle. RA8875_bte_write is typically more useful.
 /// </summary>
 void RA8875_draw_data(RA8875_context_t* ctx, uint16_t x, uint16_t y, const uint8_t* buffer, int len);

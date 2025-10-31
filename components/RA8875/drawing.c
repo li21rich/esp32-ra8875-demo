@@ -22,6 +22,18 @@ void RA8875_draw_rect(RA8875_context_t* ctx, uint16_t x1, uint16_t y1, uint16_t 
     RA8875_write_register(ctx, RA8875_DCR, filled ? 0xB0 : 0x90);
 }
 
+// ADDED BY WISCONSIN RACING
+void RA8875_draw_rect_fast(RA8875_context_t* ctx, uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2) {
+    //Set up
+    set_double_register(ctx, 0x91, x1);
+    set_double_register(ctx, 0x93, y1);
+    set_double_register(ctx, 0x95, x2);
+    set_double_register(ctx, 0x97, y2);
+
+    //Execute
+    RA8875_write_register(ctx, RA8875_DCR, 0xB0);
+}
+
 void RA8875_draw_data(RA8875_context_t* ctx, uint16_t x, uint16_t y, const uint8_t* buffer, int len) {
     //Set up
     set_double_register(ctx, RA8875_CURH0, x);

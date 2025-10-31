@@ -23,6 +23,8 @@
     "ra8875.h": "c",
     "gpio.h": "c",
     "compare": "c",
-    "cstdint": "c"
+    "cstdint": "c",
+    "stdint.h": "c",
+    "display.h": "c"
   }
 }
