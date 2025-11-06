@@ -50,13 +50,11 @@ void app_main(void)
         if (toggle_mode_pressed) {
             toggle_mode_pressed = false;
             ToggleWhetherDrive();
-            vTaskDelay(pdMS_TO_TICKS(1500));
         } else if (toggle_submode_pressed){
             toggle_submode_pressed = false;
 
             if (CURRENT_SCREEN != SCREEN_DEBUG_NO_RTD) {
                 ToggleDuringDrive();
-                vTaskDelay(pdMS_TO_TICKS(1500));
             }
         }
 

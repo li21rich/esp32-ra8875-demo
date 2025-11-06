@@ -14,7 +14,7 @@
 
 // LCD SPI configuration and pin assignments  
 #define LCD_SPI_HOST              SPI3_HOST
-#define LCD_SPI_SPEED             140000   // 115200 = safe, 2800000 = highly unstable. Increase when done.
+#define LCD_SPI_SPEED             140000 // 140000 = good, 115200 = safe, 2800000 = highly unstable. Increase when done.
 #define LCD_PIN_MOSI              13
 #define LCD_PIN_MISO              12
 #define LCD_PIN_SCLK              11
@@ -331,7 +331,7 @@ static void Display_UsePrerenderedDebugRTD()
     Display_EnableTextModeAndFont(DISPLAY_FONT_INTERNAL);  
     Display_WriteNumberAt(50,  0   + VALUES_Y_OFFSET, false, defaultFloat); // LV Voltage   
     Display_WriteNumberAt(355, 0   + VALUES_Y_OFFSET, false, defaultFloat); // Last Lap Time  
-    Display_WriteNumberAt(650, 0   + VALUES_Y_OFFSET, false, defaultFloat); // Pack Voltage 
+    Display_WriteNumberAt(655, 0   + VALUES_Y_OFFSET, false, defaultFloat); // Pack Voltage 
     Display_WriteNumberAt(50,  120 + VALUES_Y_OFFSET, true, defaultInt); // Motor Temp Max + corner
     Display_WriteTextAt(  90,  120 + VALUES_Y_OFFSET, defaultString);
     Display_WriteNumberAt(355, 120 + VALUES_Y_OFFSET, false, defaultFloat); // Pack % 

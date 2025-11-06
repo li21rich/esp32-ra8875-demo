@@ -5,8 +5,9 @@
 #include <stdbool.h>
 #include "controller.h"
 #include "display.h"
-#include "esp_attr.h"
 #include "driver/gpio.h"
+#include "esp_attr.h"
+#include "esp_timer.h"
 
 #define BTN_GPIO_tmp1_DI            19
 #define BTN_GPIO_tmp2_DI            20
@@ -14,17 +15,30 @@
 #define BTN_GPIO_TOGGLE_MODE_DI     48  // Switch between main/debug - mode
 #define BTN_GPIO_TOGGLE_SUBMODE_DI  47  // Switch laps/RTD depending on screen - submode
 
+#define DEBOUNCE_TIME_US (200 * 1000)
+
 volatile bool toggle_mode_pressed = false;
 volatile bool toggle_submode_pressed = false;
 
+static volatile int64_t last_mode_press_time_us = 0;
+static volatile int64_t last_submode_press_time_us = 0;
+
 static void IRAM_ATTR Controller_ISR_Mode(void* arg)
 {
-    toggle_mode_pressed = true;
+    int64_t current_time_us = esp_timer_get_time();
+    if ((current_time_us - last_mode_press_time_us) > DEBOUNCE_TIME_US) {
+        toggle_mode_pressed = true;
+        last_mode_press_time_us = current_time_us;
+    }
 }
 
 static void IRAM_ATTR Controller_ISR_Submode(void* arg)
 {
-    toggle_submode_pressed = true;
+    int64_t current_time_us = esp_timer_get_time();
+    if ((current_time_us - last_submode_press_time_us) > DEBOUNCE_TIME_US) {
+        toggle_submode_pressed = true;
+        last_submode_press_time_us = current_time_us;
+    }
 }
 
 void Controller_Init()
