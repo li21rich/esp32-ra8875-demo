@@ -77,7 +77,6 @@ void RA8875_draw_rect(RA8875_context_t* ctx, uint16_t x1, uint16_t y1, uint16_t 
 /// </summary>
 void RA8875_draw_rect_fast(RA8875_context_t* ctx, uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2);
 
-
 /// <summary>
 /// Draws a data directly to the screen in a linear fashion, not in a rectangle. RA8875_bte_write is typically more useful.
 /// </summary>

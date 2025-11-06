@@ -48,6 +48,23 @@ static void wait_for_interrupt(RA8875_context_t* ctx, uint8_t mask) {
     } while (!(status & mask));    
 }
 
+// ADDED BY WISCONSIN RACING
+static void wait_for_interrupt_polling(RA8875_context_t* ctx, uint8_t mask) {
+    uint8_t status;
+    int max_polls = 1000;
+    int polls = 0;
+    
+    while (polls < max_polls) {
+        status = RA8875_read_register(ctx, 0xF1);
+        if (status & mask) {
+            RA8875_write_register(ctx, 0xF1, status);
+            return;
+        }
+        vTaskDelay(pdMS_TO_TICKS(1));
+        polls++;
+    }
+}
+
 #define MAX_BLOCK_SIZE 512
 #define INT_BTE_RW 1
 #define INT_BTE_COMPLETED (1 << 1)
@@ -91,7 +108,7 @@ void RA8875_bte_move(RA8875_context_t* ctx, uint16_t srcX, uint16_t srcY, uint8_
     set_bte_size(ctx, width, height);
     set_bte_opcode(ctx, negative ? 0x3 : 0x2, rop);
     exec_bte(ctx);
-    wait_for_interrupt(ctx, INT_BTE_COMPLETED);
+    wait_for_interrupt_polling(ctx, INT_BTE_COMPLETED);
 }
 
 void RA8875_bte_fill(RA8875_context_t* ctx, uint16_t x, uint16_t y, uint8_t layer, uint16_t width, uint16_t height, uint8_t color) {
