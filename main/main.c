@@ -26,7 +26,7 @@ static void ToggleDuringDrive(void) {
             break;
         case SCREEN_MAIN_LAPS:
             Display_SwitchScreen(SCREEN_WARN);
-            vTaskDelay(pdMS_TO_TICKS(550));
+            vTaskDelay(pdMS_TO_TICKS(500));
             Display_SwitchScreen(SCREEN_DEBUG_RTD);
             break;
         case SCREEN_DEBUG_RTD:

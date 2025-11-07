@@ -4,8 +4,11 @@
 * Additional Notes:
 * - See RA8875.h for driver library functions. 
 * - RA8875 Datasheet: https://support.midasdisplays.com/wp-content/uploads/2025/06/RA8875.pdf
+* - If rectangles are being incompletely drawn or buggy, you may need to give it more time while in 
+*   Draw mode before switching to text mode. 
 */
 
+#include <math.h>
 #include "display.h"
 #include "RA8875.h"
 #include "comicsans_font.h"
@@ -52,10 +55,11 @@
 #define RA8875_VAL_MODE_GRAPHIC   0x00  // Graphic mode
 #define RA8875_VAL_MODE_TEXT      0x80  // Text mode
 
-// Colors
+// Colors - 8-bit val interpreted as 3:3:2 RGB in 256-color mode. 7–6 → blue (2 bits) 5–3 → green (3 bits) 2–0 → red (3 bits)
 #define COLOR_WHITE              255   
 #define COLOR_GREEN              32
 #define COLOR_RED                5
+#define COLOR_YELLOW             63
 
 // Layers
 #define LAYER_DISPLAY   0
@@ -94,7 +98,8 @@ static const LineSpec debugBordersNoRTD[] = {
 #pragma GCC diagnostic ignored "-Woverride-init" // Suppress overrides warnings
 static const uint8_t glyphAdvanceComicSans[256] = { // Allows for custom spacing for wider or narrower letters
     [0 ... 255] = 16,  // Defaults to 16
-    [' '] = 12, ['l'] = 13, ['i'] = 13, ['o'] = 15, ['r'] = 15, ['g'] = 15, ['a'] = 17, ['m'] = 17, ['N'] = 17, ['M'] = 18, ['G'] = 18,
+    [' '] = 12, ['l'] = 13, ['i'] = 13, ['o'] = 15, ['r'] = 15, ['g'] = 15, 
+    ['a'] = 17, ['m'] = 17, ['N'] = 17, ['M'] = 18, ['G'] = 18,
 };
 #pragma GCC diagnostic pop
 
@@ -185,11 +190,10 @@ static void Display_RenderMainScreen(bool isLaps)
     Display_EnableDrawMode();
 
     // Rectangles 
-    //Display_DrawRect(0, 0, 200, 184, COLOR_GREEN, 1);
     if (isLaps) {
-        Display_DrawRect(260, 140 + VALUES_Y_OFFSET, 450, 215, COLOR_WHITE, false);
+        Display_DrawRect(0, 170, 800, 240, COLOR_RED, true);
     } else {
-        Display_DrawRect(260, 20 + VALUES_Y_OFFSET, 450, 95, COLOR_WHITE, false);
+        Display_DrawRect(0, 90, 800, 180, COLOR_RED, true);
     }
     
     // White Borders in Main Screen
@@ -199,6 +203,7 @@ static void Display_RenderMainScreen(bool isLaps)
         Display_DrawBorders(mainBordersNoLaps, ARRAY_LEN(mainBordersNoLaps));
     }
 
+    vTaskDelay(pdMS_TO_TICKS(50));
 
     // =======================
     // ======== TEXT =========
@@ -209,15 +214,15 @@ static void Display_RenderMainScreen(bool isLaps)
 
     if (isLaps) {
         Display_WriteTextAt(30,    0 + LABELS_Y_OFFSET, "Lap Diff");
-        Display_WriteTextAt(310,   0 + LABELS_Y_OFFSET, "Last Lap Time");
+        Display_WriteTextAt(305,   0 + LABELS_Y_OFFSET, "Last Lap Time");
         Display_WriteTextAt(640,   0 + LABELS_Y_OFFSET, "Predicted");
-        Display_WriteTextAt(350, 120 + LABELS_Y_OFFSET, "Pack %"); // needs loading bar AND value
-        Display_WriteTextAt(380, 240 + LABELS_Y_OFFSET, "Lap");
+        Display_WriteTextAt(350, 120 + LABELS_Y_OFFSET, "Pack %");
+        Display_WriteTextAt(370, 240 + LABELS_Y_OFFSET, "Lap");
         Display_WriteTextAt(40,  360 + LABELS_Y_OFFSET, "Torque Limit"); // No coloring/warning
         Display_WriteTextAt(315, 360 + LABELS_Y_OFFSET, "TC Lat Mode");
         Display_WriteTextAt(590, 360 + LABELS_Y_OFFSET, "TV Balance");
     } else {
-        Display_WriteTextAt(350,   0 + LABELS_Y_OFFSET, "Pack %"); // needs loading bar AND value
+        Display_WriteTextAt(350,   0 + LABELS_Y_OFFSET, "Pack %");
         Display_WriteTextAt(270, 185 + LABELS_Y_OFFSET, "Distance Traveled");
         Display_WriteTextAt(40,  360 + LABELS_Y_OFFSET, "Torque Limit"); // No coloring/warning
         Display_WriteTextAt(320, 360 + LABELS_Y_OFFSET, "TC Lat Mode");
@@ -231,21 +236,21 @@ static void Display_RenderMainScreen(bool isLaps)
     Display_EnableTextModeAndFont(DISPLAY_FONT_INTERNAL);  
 
     if (isLaps) {
-        Display_WriteNumberAt(40,  0   + VALUES_Y_OFFSET, false, defaultFloat); // Lap Diff
-        Display_WriteNumberAt(360, 0   + VALUES_Y_OFFSET, false, defaultFloat); // Last Lap Time
-        Display_WriteNumberAt(660, 0   + VALUES_Y_OFFSET, false, defaultFloat); // Predicted
-        Display_WriteNumberAt(460, 120 + VALUES_Y_OFFSET, false, defaultFloat); // Pack %
-        Display_WriteNumberAt(390, 240 + VALUES_Y_OFFSET, true, defaultInt); // Lap
-        Display_WriteNumberAt(120, 360 + VALUES_Y_OFFSET, true, defaultInt); // Torque Limit
-        Display_WriteNumberAt(380, 360 + VALUES_Y_OFFSET, true, defaultInt); // TC Lat Mode
-        Display_WriteNumberAt(660, 360 + VALUES_Y_OFFSET, true, defaultInt); // TV Balance
+        Display_WriteNumberAt(40,  0   + VALUES_Y_OFFSET, false, defaultFloat, false); // Lap Diff
+        Display_WriteNumberAt(350, 0   + VALUES_Y_OFFSET, false, defaultFloat, false); // Last Lap Time
+        Display_WriteNumberAt(660, 0   + VALUES_Y_OFFSET, false, defaultFloat, false); // Predicted
+        Display_WriteNumberAt(350, 120 + VALUES_Y_OFFSET, false, defaultFloat, false); // Pack %
+        Display_WriteNumberAt(380, 240 + VALUES_Y_OFFSET, true, defaultInt, false); // Lap
+        Display_WriteNumberAt(120, 360 + VALUES_Y_OFFSET, true, defaultInt, false); // Torque Limit
+        Display_WriteNumberAt(380, 360 + VALUES_Y_OFFSET, true, defaultInt, false); // TC Lat Mode
+        Display_WriteNumberAt(660, 360 + VALUES_Y_OFFSET, true, defaultInt, false); // TV Balance
 
     } else {
-        Display_WriteNumberAt(460, 0   + VALUES_Y_OFFSET, false, defaultFloat); // Pack %
-        Display_WriteNumberAt(350, 180 + VALUES_Y_OFFSET, false, defaultFloat); // Distance Traveled
-        Display_WriteNumberAt(120, 360 + VALUES_Y_OFFSET, true, defaultInt); // Torque Limit
-        Display_WriteNumberAt(390, 360 + VALUES_Y_OFFSET, true, defaultInt); // TC Lat Mode
-        Display_WriteNumberAt(660, 360 + VALUES_Y_OFFSET, true, defaultInt); // TV Balance
+        Display_WriteNumberAt(350, 0   + VALUES_Y_OFFSET + 50, false, defaultFloat, false); // Pack %
+        Display_WriteNumberAt(350, 180 + VALUES_Y_OFFSET + 50, false, defaultFloat, false); // Distance Traveled
+        Display_WriteNumberAt(120, 360 + VALUES_Y_OFFSET, true, defaultInt, false); // Torque Limit
+        Display_WriteNumberAt(390, 360 + VALUES_Y_OFFSET, true, defaultInt, false); // TC Lat Mode
+        Display_WriteNumberAt(660, 360 + VALUES_Y_OFFSET, true, defaultInt, false); // TV Balance
     }
 }
 
@@ -258,9 +263,6 @@ static void Display_RenderStaticDebugScreen()
     // ======================= 
 
     Display_EnableDrawMode();
-
-    // Rectangles 
-    Display_DrawRect(405, 380 + VALUES_Y_OFFSET, 495, 450, COLOR_WHITE, false);
 
     // White Borders in Debug Screen
     Display_DrawBorders(debugBordersNoRTD, ARRAY_LEN(debugBordersNoRTD));
@@ -291,78 +293,49 @@ static void Display_RenderStaticDebugScreen()
     Display_WriteTextAt(620, 360 + LABELS_Y_OFFSET, "Power Limit");
     
     // Text Values
-    float defaultFloat = 0.0;
+    float defaultFloat = 0;
     int defaultInt = 0;
     char* defaultString = "RR";
     
     Display_EnableTextModeAndFont(DISPLAY_FONT_INTERNAL);  
 
-    Display_WriteNumberAt(50,  0   + VALUES_Y_OFFSET, false, defaultFloat); // LV Voltage   
-    Display_WriteNumberAt(250, 0   + VALUES_Y_OFFSET, false, defaultFloat); // GPS Long
-    Display_WriteNumberAt(450, 0   + VALUES_Y_OFFSET, false, defaultFloat); // GPS Lat
-    Display_WriteNumberAt(640, 0   + VALUES_Y_OFFSET, false, defaultFloat); // Pack Voltage 
-    Display_WriteNumberAt(40,  120 + VALUES_Y_OFFSET, true, defaultInt); // Motor Temp Max + corner
+    Display_WriteNumberAt(50,  0   + VALUES_Y_OFFSET, false, defaultFloat, false); // LV Voltage   
+    Display_WriteNumberAt(215, 0   + VALUES_Y_OFFSET, false, defaultFloat, true); // GPS Long (many digits)
+    Display_WriteNumberAt(415, 0   + VALUES_Y_OFFSET, false, defaultFloat, true); // GPS Lat (many digits)
+    Display_WriteNumberAt(650, 0   + VALUES_Y_OFFSET, false, defaultFloat, false); // Pack Voltage 
+    Display_WriteNumberAt(40,  120 + VALUES_Y_OFFSET, true, defaultInt, false); // Motor Temp Max + corner
     Display_WriteTextAt(  80,  120 + VALUES_Y_OFFSET, defaultString);
-    Display_WriteNumberAt(250, 120 + VALUES_Y_OFFSET, false, defaultFloat); // APP Arb
-    Display_WriteNumberAt(450, 120 + VALUES_Y_OFFSET, false, defaultFloat); // Torque Req Avg
-    Display_WriteNumberAt(690, 120 + VALUES_Y_OFFSET, true, defaultInt); // Rotor Temp
-    Display_WriteNumberAt(40,  240 + VALUES_Y_OFFSET, true, defaultInt); // Inverter temp max + corner
+    Display_WriteNumberAt(250, 120 + VALUES_Y_OFFSET, false, defaultFloat, false); // APP Arb
+    Display_WriteNumberAt(450, 120 + VALUES_Y_OFFSET, false, defaultFloat, false); // Torque Req Avg
+    Display_WriteNumberAt(690, 120 + VALUES_Y_OFFSET, true, defaultInt, false); // Rotor Temp
+    Display_WriteNumberAt(40,  240 + VALUES_Y_OFFSET, true, defaultInt, false); // Inverter temp max + corner
     Display_WriteTextAt(  80,  240 + VALUES_Y_OFFSET, defaultString);
-    Display_WriteNumberAt(290, 240 + VALUES_Y_OFFSET, true, defaultInt); // Steer Angle
-    Display_WriteNumberAt(490, 240 + VALUES_Y_OFFSET, true, defaultInt); // Front Brake Bias
-    Display_WriteNumberAt(690, 240 + VALUES_Y_OFFSET, true, defaultInt); // Logging
-    Display_WriteNumberAt(20,  360 + VALUES_Y_OFFSET, true, defaultInt); // Min Cell V + index
-    Display_WriteTextAt(  40,  360 + VALUES_Y_OFFSET, ",i="); 
-    Display_WriteNumberAt(120, 360 + VALUES_Y_OFFSET, true, defaultInt); 
-    Display_WriteNumberAt(220, 360 + VALUES_Y_OFFSET, true, defaultInt); // Peak Cell T + index
-    Display_WriteTextAt(  240, 360 + VALUES_Y_OFFSET, ",i="); 
-    Display_WriteNumberAt(320, 360 + VALUES_Y_OFFSET, true, defaultInt); 
-    Display_WriteNumberAt(500, 360 + VALUES_Y_OFFSET, false, defaultFloat); // Front Brake Pressure
-    Display_WriteNumberAt(690, 360 + VALUES_Y_OFFSET, true, defaultInt); // Power Limit
-}
-
-static void Display_UsePrerenderedDebugRTD()
-{
-    Display_ResetState();
-    RA8875_bte_move(&lcd, 0, 0, LAYER_OFFSCREEN, 0, 0, LAYER_DISPLAY, 800, 480, 0, 0xC);
-    float defaultFloat = 0.0;
-    int defaultInt = 0;
-    char* defaultString = "RR";
-    Display_EnableTextModeAndFont(DISPLAY_FONT_INTERNAL);  
-    Display_WriteNumberAt(50,  0   + VALUES_Y_OFFSET, false, defaultFloat); // LV Voltage   
-    Display_WriteNumberAt(355, 0   + VALUES_Y_OFFSET, false, defaultFloat); // Last Lap Time  
-    Display_WriteNumberAt(655, 0   + VALUES_Y_OFFSET, false, defaultFloat); // Pack Voltage 
-    Display_WriteNumberAt(50,  120 + VALUES_Y_OFFSET, true, defaultInt); // Motor Temp Max + corner
-    Display_WriteTextAt(  90,  120 + VALUES_Y_OFFSET, defaultString);
-    Display_WriteNumberAt(355, 120 + VALUES_Y_OFFSET, false, defaultFloat); // Pack % 
-    Display_WriteNumberAt(690, 120 + VALUES_Y_OFFSET, true, defaultInt); // Rotor Temp
-    Display_WriteNumberAt(50,  240 + VALUES_Y_OFFSET, true, defaultInt); // Inverter temp max + corner
-    Display_WriteTextAt(  90,  240 + VALUES_Y_OFFSET, defaultString);
-    Display_WriteNumberAt(390, 240 + VALUES_Y_OFFSET, true, defaultInt); // Lap Num
-    Display_WriteNumberAt(690, 240 + VALUES_Y_OFFSET, true, defaultInt); // Torque Limit
-    Display_WriteNumberAt(20,  360 + VALUES_Y_OFFSET, true, defaultInt); // Min Cell V + index
-    Display_WriteTextAt(  40,  360 + VALUES_Y_OFFSET, ",i="); 
-    Display_WriteNumberAt(120, 360 + VALUES_Y_OFFSET, true, defaultInt); 
-    Display_WriteNumberAt(220, 360 + VALUES_Y_OFFSET, true, defaultInt); // Peak Cell T + index
-    Display_WriteTextAt(  240, 360 + VALUES_Y_OFFSET, ",i="); 
-    Display_WriteNumberAt(320, 360 + VALUES_Y_OFFSET, true, defaultInt); 
-    Display_WriteNumberAt(500, 360 + VALUES_Y_OFFSET, false, defaultFloat); // Front Brake Pressure
-    Display_WriteNumberAt(640, 360 + VALUES_Y_OFFSET, true, defaultInt); // TC Mode
-    Display_WriteNumberAt(740, 360 + VALUES_Y_OFFSET, true, defaultInt); // TV Balance
+    Display_WriteNumberAt(250, 240 + VALUES_Y_OFFSET, false, defaultFloat, false); // Steer Angle
+    Display_WriteNumberAt(450, 240 + VALUES_Y_OFFSET, false, defaultFloat, false); // Front Brake Bias
+    Display_WriteNumberAt(690, 240 + VALUES_Y_OFFSET, true, defaultInt, false); // Logging
+    Display_WriteNumberAt(30,  360 + VALUES_Y_OFFSET, true, defaultInt, false); // Min Cell V + index
+    Display_WriteTextAt(  50,  360 + VALUES_Y_OFFSET, ",i="); 
+    Display_WriteNumberAt(120, 360 + VALUES_Y_OFFSET, true, defaultInt, false); 
+    Display_WriteNumberAt(230, 360 + VALUES_Y_OFFSET, true, defaultInt, false); // Peak Cell T + index
+    Display_WriteTextAt(  250, 360 + VALUES_Y_OFFSET, ",i="); 
+    Display_WriteNumberAt(320, 360 + VALUES_Y_OFFSET, true, defaultInt, false); 
+    Display_WriteNumberAt(450, 360 + VALUES_Y_OFFSET, false, defaultFloat, false); // Front Brake Pressure
+    Display_WriteNumberAt(690, 360 + VALUES_Y_OFFSET, true, defaultInt, false); // Power Limit
 }
 
 static void Display_PrerenderDebugRTDLabels(void) 
 {
     Display_ResetState();
     Display_EnableDrawMode();
+    Display_DrawRect(200, 170, 600, 240, COLOR_RED, true);
     Display_DrawBorders(debugBordersRTD, ARRAY_LEN(debugBordersRTD));
-    Display_DrawRect(410, 380 + VALUES_Y_OFFSET, 490, 450, COLOR_WHITE, false);
+    vTaskDelay(pdMS_TO_TICKS(50));
     Display_EnableTextModeAndFont(DISPLAY_FONT_COMIC_SANS); 
     Display_WriteTextAt(20,  0   + LABELS_Y_OFFSET, "LV Voltage");
     Display_WriteTextAt(305, 0   + LABELS_Y_OFFSET, "Last Lap Time");
     Display_WriteTextAt(610, 0   + LABELS_Y_OFFSET, "Pack Voltage");
     Display_WriteTextAt(10,  120 + LABELS_Y_OFFSET, "Motor T Max"); 
-    Display_WriteTextAt(350, 120 + LABELS_Y_OFFSET, "Pack %");
+    Display_WriteTextAt(355, 120 + LABELS_Y_OFFSET, "Pack %");
     Display_WriteTextAt(650, 120 + LABELS_Y_OFFSET, "Rotor T");
     Display_WriteTextAt(30,  240 + LABELS_Y_OFFSET, "Inv T Max"); 
     Display_WriteTextAt(380, 240 + LABELS_Y_OFFSET, "Lap");
@@ -373,6 +346,40 @@ static void Display_PrerenderDebugRTDLabels(void)
     Display_WriteTextAt(640, 360 + LABELS_Y_OFFSET, "TC");
     Display_WriteTextAt(740, 360 + LABELS_Y_OFFSET, "TV");
     RA8875_bte_move(&lcd, 0, 0, LAYER_DISPLAY, 0, 0, LAYER_OFFSCREEN, 800, 480, 0, 0xC);  // Save to off-screen
+}
+
+static void Display_UsePrerenderedDebugRTD()
+{
+    Display_ResetState();
+
+    Display_EnableDrawMode(); // ***************
+    // Rectangles would be drawn here
+
+    RA8875_bte_move(&lcd, 0, 0, LAYER_OFFSCREEN, 0, 0, LAYER_DISPLAY, 800, 480, 0, 0xC);
+    float defaultFloat = 0.0;
+    int defaultInt = 0;
+    char* defaultString = "RR";
+    Display_EnableTextModeAndFont(DISPLAY_FONT_INTERNAL);  
+    Display_WriteNumberAt(50,  0   + VALUES_Y_OFFSET, false, defaultFloat, false); // LV Voltage   
+    Display_WriteNumberAt(355, 0   + VALUES_Y_OFFSET, false, defaultFloat, false); // Last Lap Time  
+    Display_WriteNumberAt(655, 0   + VALUES_Y_OFFSET, false, defaultFloat, false); // Pack Voltage 
+    Display_WriteNumberAt(50,  120 + VALUES_Y_OFFSET, true, defaultInt, false); // Motor Temp Max + corner
+    Display_WriteTextAt(  90,  120 + VALUES_Y_OFFSET, defaultString);
+    Display_WriteNumberAt(355, 120 + VALUES_Y_OFFSET, false, defaultFloat, false); // Pack % 
+    Display_WriteNumberAt(690, 120 + VALUES_Y_OFFSET, true, defaultInt, false); // Rotor Temp
+    Display_WriteNumberAt(50,  240 + VALUES_Y_OFFSET, true, defaultInt, false); // Inverter temp max + corner
+    Display_WriteTextAt(  90,  240 + VALUES_Y_OFFSET, defaultString);
+    Display_WriteNumberAt(390, 240 + VALUES_Y_OFFSET, true, defaultInt, false); // Lap Num
+    Display_WriteNumberAt(690, 240 + VALUES_Y_OFFSET, true, defaultInt, false); // Torque Limit
+    Display_WriteNumberAt(20,  360 + VALUES_Y_OFFSET, true, defaultInt, false); // Min Cell V + index
+    Display_WriteTextAt(  40,  360 + VALUES_Y_OFFSET, ",i="); 
+    Display_WriteNumberAt(120, 360 + VALUES_Y_OFFSET, true, defaultInt, false); 
+    Display_WriteNumberAt(220, 360 + VALUES_Y_OFFSET, true, defaultInt, false); // Peak Cell T + index
+    Display_WriteTextAt(  240, 360 + VALUES_Y_OFFSET, ",i="); 
+    Display_WriteNumberAt(320, 360 + VALUES_Y_OFFSET, true, defaultInt, false); 
+    Display_WriteNumberAt(455, 360 + VALUES_Y_OFFSET, false, defaultFloat, false); // Front Brake Pressure
+    Display_WriteNumberAt(640, 360 + VALUES_Y_OFFSET, true, defaultInt, false); // TC Mode
+    Display_WriteNumberAt(740, 360 + VALUES_Y_OFFSET, true, defaultInt, false); // TV Balance
 }
 
 static void Display_InternalFontSize(uint8_t size) 
@@ -391,7 +398,7 @@ static void Display_Warn()
     Display_EnableTextModeAndFont(DISPLAY_FONT_INTERNAL);
     Display_InternalFontSize(FONT_SIZE_QUADRUPLE);
     Display_ForegroundWhite();
-    Display_WriteTextAt(290, 200, "WARNING");
+    Display_WriteTextAt(290, 210, "WARNING");
 }
 
 void Display_Init(void) 
@@ -462,12 +469,18 @@ void Display_WriteTextAt(uint16_t x, uint16_t y, const char* msg)
     }
 }
 
-void Display_WriteNumberAt(uint16_t x, uint16_t y, bool isWholeNumber, float value) 
-{
-    char buffer[7]; // Enough for "99.99" + '\0'
-    const char* format = isWholeNumber ? "%d" : "%.2f";
-    snprintf(buffer, sizeof(buffer), format, value);
-    Display_WriteTextAt(x, y, buffer);
+void Display_WriteNumberAt(uint16_t x, uint16_t y, bool isWholeNumber, float value, bool hasManyDigits) { 
+    if (hasManyDigits) {
+        char buffer[11]; // Enough for "999.99999" + '\0' 
+        const char* format = "%.5f"; 
+        snprintf(buffer, sizeof(buffer), format, value); 
+        Display_WriteTextAt(x, y, buffer); 
+    } else {
+        char buffer[8]; // Enough for "999.99" + '\0' 
+        const char* format = isWholeNumber ? "%d" : "%.2f"; 
+        snprintf(buffer, sizeof(buffer), format, value); 
+        Display_WriteTextAt(x, y, buffer); 
+    }
 }
 
 void Display_SwitchScreen(Screen_t nextScreen) 
