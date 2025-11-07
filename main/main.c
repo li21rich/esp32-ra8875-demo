@@ -1,9 +1,8 @@
 /**
 * Author: Richard Li
 * Editors: Richard Li
-* Additional Notes:
-* - Downloaded font Comic Sans adds a few seconds render time. Internal fonts are instant.
 */
+
 #include <stdio.h>
 #include <string.h>
 #include "display.h"

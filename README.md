@@ -1,13 +1,19 @@
 # ESP32 RA8875 Display Screen
 
-Repository for Formula SAE steering wheel display firmware.
+Repository for Formula SAE steering wheel display firmware, intended for ESP32-S3-WROOM-1 display board.
 
-This demo showcases:
-- Display initialization
-- Custom fonts and graphics
-- Interrupt handling for switching between Debug and Main screens
+Demo including:
+- Display initialization,
+- Custom fonts and graphics, 
+- & Interrupt and fault handling with two buttons toggling between non-RTD and RTD Debug and Main screens,
 
 using the Adafruit RA8875 display controller running on ESP32 with ESP-IDF with [Roman-Port’s RA8875 driver](https://github.com/Roman-Port/RA8875) for the driver.
 
-If facing issues during build, you may need to empty the compilerPath field in .vscode/c_cpp_properties.json and full clean:
-    "compilerPath": "",
+IF FACING ERROR IN BUILD, you may need to empty the compilerPath field in .vscode/c_cpp_properties.json and full clean:
+    "compilerPath": ""
+
+Additional notes:
+ - See RA8875.h for driver library functions. 
+ - [RA8875 Datasheet](https://support.midasdisplays.com/wp-content/uploads/2025/06/RA8875.pdf)
+ - [Steering Wheel UI design](https://docs.google.com/spreadsheets/d/1wyTeVe2CrvfaHK9Z1gjt5AWtrlrcMFISqQ3uaPND4KI/edit)
+ - Downloaded Comic Sans font adds a few seconds loading time and must be blit out across the screen. By contrast, using internal font is instant.

@@ -1,11 +1,6 @@
 /**
 * Author: Richard Li
 * Editors: Richard Li
-* Additional Notes:
-* - See RA8875.h for driver library functions. 
-* - RA8875 Datasheet: https://support.midasdisplays.com/wp-content/uploads/2025/06/RA8875.pdf
-* - If rectangles are being incompletely drawn or buggy, you may need to give it more time while in 
-*   Draw mode before switching to text mode. 
 */
 
 #include <math.h>
@@ -17,12 +12,12 @@
 
 // LCD SPI configuration and pin assignments  
 #define LCD_SPI_HOST              SPI3_HOST
-#define LCD_SPI_SPEED             170000 // 160000 = good, 115200 = safe, 2800000 = highly unstable. Increase when done.
+#define LCD_SPI_SPEED             170000 // 115200 = safe, 170000 = effective, 190000 to 2800000 = highly unstable.
 #define LCD_PIN_MOSI              13
 #define LCD_PIN_MISO              12
 #define LCD_PIN_SCLK              11
 #define LCD_PIN_CS                6
-#define LCD_PIN_RESET             5 // was incorrectly 4, I think? Pin unused.
+#define LCD_PIN_RESET             5      // was incorrectly 4, I think? Pin unused.
 #define LCD_PIN_INT               4
 
 // Horizontal and vertical sync + display resolution
@@ -74,7 +69,8 @@
 #define GLYPH_SCALE              2
 #define LABELS_Y_OFFSET          11
 #define VALUES_Y_OFFSET          55
-#define DEFAULT_DELAY            20
+#define DEFAULT_DELAY            20  // Allows rectangles to fully render before switching to text mode
+#define WATCHDOG_DELAY            5  // Satiates task watchdog when writing text can take too long
 #define ARRAY_LEN(arr) (sizeof(arr) / sizeof((arr)[0]))
 
 static RA8875_context_t lcd;
@@ -294,6 +290,7 @@ static void Display_RenderStaticDebugScreen()
     Display_WriteTextAt(240, 120 + LABELS_Y_OFFSET, "APP Arb");
     Display_WriteTextAt(400, 120 + LABELS_Y_OFFSET, "Torque Rq Avg");
     Display_WriteTextAt(650, 120 + LABELS_Y_OFFSET, "Rotor T");
+    vTaskDelay(pdMS_TO_TICKS(WATCHDOG_DELAY));
     Display_WriteTextAt(30,  240 + LABELS_Y_OFFSET, "Inv T Max"); 
     Display_WriteTextAt(220, 240 + LABELS_Y_OFFSET, "Steer Angle");
     Display_WriteTextAt(410, 240 + LABELS_Y_OFFSET, "F Brake Bias");
@@ -361,7 +358,7 @@ static void Display_PrerenderDebugRTDLabels(void)
     Display_WriteTextAt(355, 120 + LABELS_Y_OFFSET, "Pack %");
     Display_WriteTextAt(650, 120 + LABELS_Y_OFFSET, "Rotor T");
     Display_WriteTextAt(30,  240 + LABELS_Y_OFFSET, "Inv T Max"); 
-    vTaskDelay(pdMS_TO_TICKS(5));
+    vTaskDelay(pdMS_TO_TICKS(WATCHDOG_DELAY));
     Display_WriteTextAt(380, 240 + LABELS_Y_OFFSET, "Lap");
     Display_WriteTextAt(610, 240 + LABELS_Y_OFFSET, "Torque Limit"); // No coloring/warning
     Display_WriteTextAt(20,  360 + LABELS_Y_OFFSET, "Min Cell V"); 
@@ -416,7 +413,7 @@ static void Display_Warn()
     Display_EnableTextModeAndFont(DISPLAY_FONT_INTERNAL);
     Display_InternalFontSize(FONT_SIZE_QUADRUPLE);
     Display_ForegroundWhite();
-    Display_WriteTextAt(290, 210, "WARNING");
+    Display_WriteTextAt(290, 200, "WARNING");
 }
 
 void Display_Init(void) 
@@ -487,7 +484,8 @@ void Display_WriteTextAt(uint16_t x, uint16_t y, const char* msg)
     }
 }
 
-void Display_WriteNumberAt(uint16_t x, uint16_t y, bool isWholeNumber, float value, bool hasManyDigits) { 
+void Display_WriteNumberAt(uint16_t x, uint16_t y, bool isWholeNumber, float value, bool hasManyDigits) 
+{ 
     if (hasManyDigits) {
         char buffer[11]; // Enough for "999.99999" + '\0' 
         const char* format = "%.5f"; 
