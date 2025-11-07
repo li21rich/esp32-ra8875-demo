@@ -229,8 +229,8 @@ static void Display_RenderMainScreen(bool isLaps)
         Display_WriteTextAt(315, 360 + LABELS_Y_OFFSET, "TC Lat Mode");
         Display_WriteTextAt(590, 360 + LABELS_Y_OFFSET, "TV Balance");
     } else {
-        Display_WriteTextAt(350,   0 + LABELS_Y_OFFSET, "Pack %");
-        Display_WriteTextAt(270, 185 + LABELS_Y_OFFSET, "Distance Traveled");
+        Display_WriteTextAt(350,   0 + LABELS_Y_OFFSET + 50, "Pack %");
+        Display_WriteTextAt(270, 185 + LABELS_Y_OFFSET + 50, "Distance Traveled");
         Display_WriteTextAt(40,  360 + LABELS_Y_OFFSET, "Torque Limit"); // No coloring/warning
         Display_WriteTextAt(320, 360 + LABELS_Y_OFFSET, "TC Lat Mode");
         Display_WriteTextAt(590, 360 + LABELS_Y_OFFSET, "TV Balance");
