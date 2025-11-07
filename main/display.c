@@ -17,7 +17,7 @@
 
 // LCD SPI configuration and pin assignments  
 #define LCD_SPI_HOST              SPI3_HOST
-#define LCD_SPI_SPEED             140000 // 140000 = good, 115200 = safe, 2800000 = highly unstable. Increase when done.
+#define LCD_SPI_SPEED             170000 // 160000 = good, 115200 = safe, 2800000 = highly unstable. Increase when done.
 #define LCD_PIN_MOSI              13
 #define LCD_PIN_MISO              12
 #define LCD_PIN_SCLK              11
@@ -61,16 +61,20 @@
 #define COLOR_RED                5
 #define COLOR_YELLOW             63
 
-// Layers
-#define LAYER_DISPLAY   0
-#define LAYER_OFFSCREEN 1
-
-// Misc
-#define LABELS_Y_OFFSET          11
-#define VALUES_Y_OFFSET          55
-#define GLYPH_SCALE              2  
+// Font size
+#define FONT_SIZE_DOUBLE         (0x05 | 0x40)  // 2x2 | transparent background
 #define FONT_SIZE_TRIPLE         (0x0A | 0x40)  // 3x3 | transparent background
 #define FONT_SIZE_QUADRUPLE      (0x0F | 0x40)  // 4x4 | transparent background
+
+// Layers
+#define LAYER_DISPLAY            0
+#define LAYER_OFFSCREEN          1
+
+// Misc
+#define GLYPH_SCALE              2
+#define LABELS_Y_OFFSET          11
+#define VALUES_Y_OFFSET          55
+#define DEFAULT_DELAY            20
 #define ARRAY_LEN(arr) (sizeof(arr) / sizeof((arr)[0]))
 
 static RA8875_context_t lcd;
@@ -110,6 +114,13 @@ static void Display_ForegroundWhite(void)
     RA8875_write_register(&lcd, RA8875_REG_FG_R, 0x07);
     RA8875_write_register(&lcd, RA8875_REG_FG_G, 0x07);
     RA8875_write_register(&lcd, RA8875_REG_FG_B, 0x03); 
+}
+
+static void Display_InternalFontSize(uint8_t size) 
+{
+    RA8875_write_register(&lcd, RA8875_REG_FONT_SIZE, size);
+    RA8875_write_register(&lcd, RA8875_REG_FONT_SRC, 0x00);
+    RA8875_write_register(&lcd, RA8875_REG_FONT_SEL, 0x00);
 }
 
 static void Display_PrecomputeGlyphs(void)
@@ -203,7 +214,7 @@ static void Display_RenderMainScreen(bool isLaps)
         Display_DrawBorders(mainBordersNoLaps, ARRAY_LEN(mainBordersNoLaps));
     }
 
-    vTaskDelay(pdMS_TO_TICKS(50));
+    vTaskDelay(pdMS_TO_TICKS(DEFAULT_DELAY));
 
     // =======================
     // ======== TEXT =========
@@ -328,8 +339,20 @@ static void Display_PrerenderDebugRTDLabels(void)
     Display_ResetState();
     Display_EnableDrawMode();
     Display_DrawRect(200, 170, 600, 240, COLOR_RED, true);
-    Display_DrawBorders(debugBordersRTD, ARRAY_LEN(debugBordersRTD));
-    vTaskDelay(pdMS_TO_TICKS(50));
+
+    // (Excluded from prerender) loading box
+    Display_DrawRect(0, 415, 800, 480, COLOR_YELLOW, true);
+
+    vTaskDelay(pdMS_TO_TICKS(DEFAULT_DELAY));
+
+    // (Excluded from prerender) Loading text: Internal font, blue text, smaller font
+    Display_EnableTextModeAndFont(DISPLAY_FONT_INTERNAL);
+    Display_InternalFontSize(FONT_SIZE_DOUBLE);
+    RA8875_write_register(&lcd, RA8875_REG_FG_R, 0x00); 
+    RA8875_write_register(&lcd, RA8875_REG_FG_G, 0x00);
+    RA8875_write_register(&lcd, RA8875_REG_FG_B, 0x03); 
+    Display_WriteTextAt(40,  430, "<<< PLEASE WAIT >>>     Loading Cumic Sans... "); 
+
     Display_EnableTextModeAndFont(DISPLAY_FONT_COMIC_SANS); 
     Display_WriteTextAt(20,  0   + LABELS_Y_OFFSET, "LV Voltage");
     Display_WriteTextAt(305, 0   + LABELS_Y_OFFSET, "Last Lap Time");
@@ -338,6 +361,7 @@ static void Display_PrerenderDebugRTDLabels(void)
     Display_WriteTextAt(355, 120 + LABELS_Y_OFFSET, "Pack %");
     Display_WriteTextAt(650, 120 + LABELS_Y_OFFSET, "Rotor T");
     Display_WriteTextAt(30,  240 + LABELS_Y_OFFSET, "Inv T Max"); 
+    vTaskDelay(pdMS_TO_TICKS(5));
     Display_WriteTextAt(380, 240 + LABELS_Y_OFFSET, "Lap");
     Display_WriteTextAt(610, 240 + LABELS_Y_OFFSET, "Torque Limit"); // No coloring/warning
     Display_WriteTextAt(20,  360 + LABELS_Y_OFFSET, "Min Cell V"); 
@@ -345,17 +369,18 @@ static void Display_PrerenderDebugRTDLabels(void)
     Display_WriteTextAt(405, 360 + LABELS_Y_OFFSET, "F Brake Press");
     Display_WriteTextAt(640, 360 + LABELS_Y_OFFSET, "TC");
     Display_WriteTextAt(740, 360 + LABELS_Y_OFFSET, "TV");
-    RA8875_bte_move(&lcd, 0, 0, LAYER_DISPLAY, 0, 0, LAYER_OFFSCREEN, 800, 480, 0, 0xC);  // Save to off-screen
+    RA8875_bte_move(&lcd, 0, 0, LAYER_DISPLAY, 0, 0, LAYER_OFFSCREEN, 800, 400, 0, 0xC);  // Save to off-screen, ignore lower part
 }
 
 static void Display_UsePrerenderedDebugRTD()
 {
     Display_ResetState();
 
-    Display_EnableDrawMode(); // ***************
-    // Rectangles would be drawn here
+    RA8875_bte_move(&lcd, 0, 0, LAYER_OFFSCREEN, 0, 0, LAYER_DISPLAY, 800, 400, 0, 0xC);
 
-    RA8875_bte_move(&lcd, 0, 0, LAYER_OFFSCREEN, 0, 0, LAYER_DISPLAY, 800, 480, 0, 0xC);
+    Display_EnableDrawMode();
+    Display_DrawBorders(debugBordersRTD, ARRAY_LEN(debugBordersRTD));
+
     float defaultFloat = 0.0;
     int defaultInt = 0;
     char* defaultString = "RR";
@@ -382,19 +407,12 @@ static void Display_UsePrerenderedDebugRTD()
     Display_WriteNumberAt(740, 360 + VALUES_Y_OFFSET, true, defaultInt, false); // TV Balance
 }
 
-static void Display_InternalFontSize(uint8_t size) 
-{
-    RA8875_write_register(&lcd, RA8875_REG_FONT_SIZE, size);
-    RA8875_write_register(&lcd, RA8875_REG_FONT_SRC, 0x00);
-    RA8875_write_register(&lcd, RA8875_REG_FONT_SEL, 0x00);
-}
-
 static void Display_Warn() 
 {
     Display_ResetState();
     Display_EnableDrawMode();
     Display_DrawRect(0, 0, 800, 480, COLOR_RED, true);
-    vTaskDelay(pdMS_TO_TICKS(50));
+    vTaskDelay(pdMS_TO_TICKS(DEFAULT_DELAY));
     Display_EnableTextModeAndFont(DISPLAY_FONT_INTERNAL);
     Display_InternalFontSize(FONT_SIZE_QUADRUPLE);
     Display_ForegroundWhite();
@@ -430,7 +448,7 @@ void Display_EnableTextModeAndFont(DisplayFont_t fontType)
     currentFont = fontType;
     if (fontType == DISPLAY_FONT_INTERNAL) {
         if(inGraphicMode) {
-            RA8875_write_register(&lcd, RA8875_REG_MODE_CTRL, RA8875_VAL_MODE_TEXT);    // Switch to text mode
+            RA8875_write_register(&lcd, RA8875_REG_MODE_CTRL, RA8875_VAL_MODE_TEXT); // Switch to text mode
         }
 
         Display_ForegroundWhite();
