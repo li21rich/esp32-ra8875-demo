@@ -1,6 +1,6 @@
-# ESP32 RA8875 Display Screen
+# ESP32 RA8875 Steering Wheel Display
 
-Repository for Formula SAE steering wheel display firmware, intended for ESP32-S3-WROOM-1 display board.
+Repository for Formula SAE steering wheel display firmware, intended for ESP32-S3-WROOM-1 microcontroller and Adafruit RA8875 display board.
 
 Demo including:
 - Display initialization,
@@ -9,7 +9,7 @@ Demo including:
 
 using the Adafruit RA8875 display controller running on ESP32 with ESP-IDF with [Roman-Port’s RA8875 driver](https://github.com/Roman-Port/RA8875) for the driver.
 
-IF FACING ERROR IN BUILD, you may need to empty the compilerPath field in .vscode/c_cpp_properties.json and full clean:
+If IntelliSense errors occur, try emptying the compilerPath field in .vscode/c_cpp_properties.json and perform a full clean build:
     "compilerPath": ""
 
 Additional notes:
