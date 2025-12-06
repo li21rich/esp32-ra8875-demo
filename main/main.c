@@ -3,8 +3,6 @@
 * Editors: Richard Li
 */
 
-#include <stdio.h>
-#include <string.h>
 #include "display.h"
 #include "controller.h"
 #include "freertos/FreeRTOS.h"
@@ -38,11 +36,7 @@ static void ToggleDuringDrive(void) {
 
 void app_main(void) 
 {
-    // TEMP
-    //esp_task_wdt_deinit();
-
-    // Init
-    Display_Init(); // Defaults to static debug screen
+    Display_Init();
     Controller_Init();
 
     while (1) {
