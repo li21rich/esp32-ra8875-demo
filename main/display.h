@@ -32,13 +32,13 @@ void Display_SwitchScreen(Screen_t nextScreen);
 
 // Write Mode Switching
 void Display_EnableDrawMode(void);
-void Display_EnableTextModeAndFont(DisplayFont_t fontType);
+void Display_EnableTextModeAndFont(DisplayFont_t fontType, uint8_t size);
 
 // Drawing and Text
 void Display_DrawRect(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint8_t color, bool filled);
 void Display_WriteTextAt(uint16_t x, uint16_t y, const char* msg);
 void Display_WriteNumberAt(uint16_t x, uint16_t y, bool isWholeNumber, float value, bool hasManyDigits);
 
-// Updating Values!!! TBD
+// Updating Values from CAN!!! TODO
 // void Display_UpdateValueString(maybe-some-typedef-for-which-value-is-being-updated, const char* string); // i.e. "RR" in Motor T Max and Inv T Max
 // void Display_UpdateValue(maybe-some-typedef-for-which-value-is-being-updated, float value); // everything else

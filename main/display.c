@@ -12,7 +12,7 @@
 
 // LCD SPI configuration and pin assignments  
 #define LCD_SPI_HOST              SPI3_HOST
-#define LCD_SPI_SPEED             170000 // 115200 = safe, 170000 = effective, 190000 to 2800000 = highly unstable.
+#define LCD_SPI_SPEED             180000 // 115200 = safe, 170000 = effective, 190000 to 2800000 = highly unstable.
 #define LCD_PIN_MOSI              13
 #define LCD_PIN_MISO              12
 #define LCD_PIN_SCLK              11
@@ -70,12 +70,12 @@
 #define LABELS_Y_OFFSET          11
 #define VALUES_Y_OFFSET          55
 #define DEFAULT_DELAY            20  // Allows rectangles to fully render before switching to text mode
-#define WATCHDOG_DELAY            5  // Satiates task watchdog when writing text can take too long
+// DISABLE COMIC SANS: #define WATCHDOG_DELAY            5  // Satiates task watchdog when writing text can take too long
 #define ARRAY_LEN(arr) (sizeof(arr) / sizeof((arr)[0]))
 
 static RA8875_context_t lcd;
 static DisplayFont_t currentFont = DISPLAY_FONT_INTERNAL;
-static GlyphBuffer glyph_cache[256];
+// DISABLE COMIC SANS: static GlyphBuffer glyph_cache[256];
 static bool inGraphicMode = false;
 static const LineSpec mainBordersNoLaps[] = {
     {0, 180, 800, 181}, {0, 360, 800, 361},
@@ -94,6 +94,8 @@ static const LineSpec debugBordersNoRTD[] = {
     {200, 0, 201, 480}, {400, 0, 401, 480}, {600, 0, 601, 480}
 };
 
+/* 
+DISABLE COMIC SANS: 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Woverride-init" // Suppress overrides warnings
 static const uint8_t glyphAdvanceComicSans[256] = { // Allows for custom spacing for wider or narrower letters
@@ -102,6 +104,7 @@ static const uint8_t glyphAdvanceComicSans[256] = { // Allows for custom spacing
     ['a'] = 17, ['m'] = 17, ['N'] = 17, ['M'] = 18, ['G'] = 18,
 };
 #pragma GCC diagnostic pop
+*/
 
 Screen_t CURRENT_SCREEN;
 
@@ -119,6 +122,8 @@ static void Display_InternalFontSize(uint8_t size)
     RA8875_write_register(&lcd, RA8875_REG_FONT_SEL, 0x00);
 }
 
+/*
+DISABLE COMIC SANS: 
 static void Display_PrecomputeGlyphs(void)
 {
     for (int i = 0; i < 256; i++) {
@@ -132,7 +137,7 @@ static void Display_PrecomputeGlyphs(void)
             }
         }
     }
-}
+}*/
 
 static void Display_SetTextCursor(uint16_t x, uint16_t y) 
 {
@@ -149,6 +154,8 @@ static void Display_ResetState(void)
     Display_ForegroundWhite();
 }
 
+/* 
+DISABLE COMIC SANS: 
 // Span batching + Caching for faster special font load
 static void Display_BlitGlyph(uint16_t x, uint16_t y, const GlyphBuffer* buf)
 {
@@ -178,6 +185,7 @@ static void Display_BlitGlyph(uint16_t x, uint16_t y, const GlyphBuffer* buf)
         }
     }
 }
+*/
 
 static void Display_DrawBorders(const LineSpec* lines, size_t count)
 {
@@ -217,7 +225,8 @@ static void Display_RenderMainScreen(bool isLaps)
     // ======================= 
     
     // Text Labels 
-    Display_EnableTextModeAndFont(DISPLAY_FONT_COMIC_SANS); 
+    // DISABLE COMIC SANS: Display_EnableTextModeAndFont(DISPLAY_FONT_COMIC_SANS); 
+    Display_EnableTextModeAndFont(DISPLAY_FONT_INTERNAL, FONT_SIZE_DOUBLE); 
 
     if (isLaps) {
         Display_WriteTextAt(30,    0 + LABELS_Y_OFFSET, "Lap Diff");
@@ -229,8 +238,8 @@ static void Display_RenderMainScreen(bool isLaps)
         Display_WriteTextAt(315, 360 + LABELS_Y_OFFSET, "TC Lat Mode");
         Display_WriteTextAt(590, 360 + LABELS_Y_OFFSET, "TV Balance");
     } else {
-        Display_WriteTextAt(350,   0 + LABELS_Y_OFFSET + 50, "Pack %");
-        Display_WriteTextAt(270, 185 + LABELS_Y_OFFSET + 50, "Distance Traveled");
+        Display_WriteTextAt(350,   0 + LABELS_Y_OFFSET + 30, "Pack %");
+        Display_WriteTextAt(270, 185 + LABELS_Y_OFFSET + 30, "Distance Traveled");
         Display_WriteTextAt(40,  360 + LABELS_Y_OFFSET, "Torque Limit"); // No coloring/warning
         Display_WriteTextAt(320, 360 + LABELS_Y_OFFSET, "TC Lat Mode");
         Display_WriteTextAt(590, 360 + LABELS_Y_OFFSET, "TV Balance");
@@ -240,7 +249,8 @@ static void Display_RenderMainScreen(bool isLaps)
     float defaultFloat = 0.00;
     int defaultInt = 0;
     
-    Display_EnableTextModeAndFont(DISPLAY_FONT_INTERNAL);  
+    // DISABLE COMIC SANS: Display_EnableTextModeAndFont(DISPLAY_FONT_INTERNAL);  
+    Display_InternalFontSize(FONT_SIZE_TRIPLE);
 
     if (isLaps) {
         Display_WriteNumberAt(40,  0   + VALUES_Y_OFFSET, false, defaultFloat, false); // Lap Diff
@@ -274,30 +284,40 @@ static void Display_RenderStaticDebugScreen()
     // White Borders in Debug Screen
     Display_DrawBorders(debugBordersNoRTD, ARRAY_LEN(debugBordersNoRTD));
 
+    vTaskDelay(pdMS_TO_TICKS(DEFAULT_DELAY));
+
 
     // =======================
     // ======== TEXT =========
     // ======================= 
     
     // Text Labels 
-    Display_EnableTextModeAndFont(DISPLAY_FONT_COMIC_SANS); 
+    // DISABLE COMIC SANS: Display_EnableTextModeAndFont(DISPLAY_FONT_COMIC_SANS); 
+    Display_EnableTextModeAndFont(DISPLAY_FONT_INTERNAL, FONT_SIZE_DOUBLE); 
 
     Display_WriteTextAt(20,  0   + LABELS_Y_OFFSET, "LV Voltage");
     Display_WriteTextAt(240, 0   + LABELS_Y_OFFSET, "GPS Long");
     Display_WriteTextAt(450, 0   + LABELS_Y_OFFSET, "GPS Lat");
-    Display_WriteTextAt(615, 0   + LABELS_Y_OFFSET, "Pack Voltage");
-    Display_WriteTextAt(20,   120 + LABELS_Y_OFFSET, "Motor T Max"); 
+    Display_WriteTextAt(605, 0   + LABELS_Y_OFFSET, "Pack Voltage");
+    Display_WriteTextAt(10,   120 + LABELS_Y_OFFSET, "Motor T Max"); 
     Display_WriteTextAt(240, 120 + LABELS_Y_OFFSET, "APP Arb");
-    Display_WriteTextAt(400, 120 + LABELS_Y_OFFSET, "Torque Rq Avg");
+
+    Display_WriteTextAt(400, 120 + LABELS_Y_OFFSET, "Torque");  // Split into three lines for manual spacing
+    Display_WriteTextAt(510, 120 + LABELS_Y_OFFSET, "Rq");      // Split into three lines for manual spacing
+    Display_WriteTextAt(550, 120 + LABELS_Y_OFFSET, "Avg");      // Split into three lines for manual spacing
+
     Display_WriteTextAt(650, 120 + LABELS_Y_OFFSET, "Rotor T");
-    vTaskDelay(pdMS_TO_TICKS(WATCHDOG_DELAY));
+    // vTaskDelay(pdMS_TO_TICKS(WATCHDOG_DELAY));
     Display_WriteTextAt(30,  240 + LABELS_Y_OFFSET, "Inv T Max"); 
-    Display_WriteTextAt(220, 240 + LABELS_Y_OFFSET, "Steer Angle");
-    Display_WriteTextAt(410, 240 + LABELS_Y_OFFSET, "F Brake Bias");
+    Display_WriteTextAt(210, 240 + LABELS_Y_OFFSET, "Steer Angle");
+    Display_WriteTextAt(405, 240 + LABELS_Y_OFFSET, "F Brake Bias");
     Display_WriteTextAt(650, 240 + LABELS_Y_OFFSET, "Logging");
     Display_WriteTextAt(20,  360 + LABELS_Y_OFFSET, "Min Cell V"); 
-    Display_WriteTextAt(220, 360 + LABELS_Y_OFFSET, "Peak Cell T");
-    Display_WriteTextAt(405, 360 + LABELS_Y_OFFSET, "F Brake Press");
+    Display_WriteTextAt(210, 360 + LABELS_Y_OFFSET, "Peak Cell T");
+
+    Display_WriteTextAt(405, 360 + LABELS_Y_OFFSET, "F");           // Split into two lines for manual spacing
+    Display_WriteTextAt(425, 360 + LABELS_Y_OFFSET, "Brake Press"); // Split into two lines for manual spacing
+
     Display_WriteTextAt(620, 360 + LABELS_Y_OFFSET, "Power Limit");
     
     // Text Values
@@ -305,7 +325,8 @@ static void Display_RenderStaticDebugScreen()
     int defaultInt = 0;
     char* defaultString = "RR";
     
-    Display_EnableTextModeAndFont(DISPLAY_FONT_INTERNAL);  
+    // Display_EnableTextModeAndFont(DISPLAY_FONT_INTERNAL);  
+    Display_InternalFontSize(FONT_SIZE_TRIPLE);
 
     Display_WriteNumberAt(50,  0   + VALUES_Y_OFFSET, false, defaultFloat, false); // LV Voltage   
     Display_WriteNumberAt(215, 0   + VALUES_Y_OFFSET, false, defaultFloat, true); // GPS Long (many digits)
@@ -331,6 +352,77 @@ static void Display_RenderStaticDebugScreen()
     Display_WriteNumberAt(690, 360 + VALUES_Y_OFFSET, true, defaultInt, false); // Power Limit
 }
 
+static void Display_RenderRTDDebugScreen(void)
+{
+    Display_ResetState();
+
+    // =======================
+    // ====== DRAWINGS =======
+    // ======================= 
+
+    Display_EnableDrawMode();
+    Display_DrawRect(200, 170, 600, 240, COLOR_RED, true);
+    Display_DrawBorders(debugBordersRTD, ARRAY_LEN(debugBordersRTD));
+
+    vTaskDelay(pdMS_TO_TICKS(DEFAULT_DELAY));
+
+    // White Borders in Debug Screen
+    Display_DrawBorders(debugBordersRTD, ARRAY_LEN(debugBordersRTD));
+
+    // =======================
+    // ======== TEXT =========
+    // ======================= 
+
+    Display_EnableTextModeAndFont(DISPLAY_FONT_INTERNAL, FONT_SIZE_DOUBLE); 
+
+    Display_WriteTextAt(20,  0   + LABELS_Y_OFFSET, "LV Voltage");
+    Display_WriteTextAt(305, 0   + LABELS_Y_OFFSET, "Last Lap Time");
+    Display_WriteTextAt(605, 0   + LABELS_Y_OFFSET, "Pack Voltage");
+    Display_WriteTextAt(10,  120 + LABELS_Y_OFFSET, "Motor T Max"); 
+    Display_WriteTextAt(355, 120 + LABELS_Y_OFFSET, "Pack %");
+    Display_WriteTextAt(650, 120 + LABELS_Y_OFFSET, "Rotor T");
+    Display_WriteTextAt(30,  240 + LABELS_Y_OFFSET, "Inv T Max"); 
+    // vTaskDelay(pdMS_TO_TICKS(WATCHDOG_DELAY));
+    Display_WriteTextAt(380, 240 + LABELS_Y_OFFSET, "Lap");
+    Display_WriteTextAt(605, 240 + LABELS_Y_OFFSET, "Torque Limit"); // No coloring/warning
+    Display_WriteTextAt(20,  360 + LABELS_Y_OFFSET, "Min Cell V"); 
+    Display_WriteTextAt(210, 360 + LABELS_Y_OFFSET, "Peak Cell T");
+
+    Display_WriteTextAt(405, 360 + LABELS_Y_OFFSET, "F");           // Split into two lines for manual spacing
+    Display_WriteTextAt(425, 360 + LABELS_Y_OFFSET, "Brake Press"); // Split into two lines for manual spacing
+
+    Display_WriteTextAt(640, 360 + LABELS_Y_OFFSET, "TC");
+    Display_WriteTextAt(740, 360 + LABELS_Y_OFFSET, "TV");
+
+    
+    Display_InternalFontSize(FONT_SIZE_TRIPLE);
+
+    float defaultFloat = 0.0;
+    int defaultInt = 0;
+    char* defaultString = "RR";
+    Display_WriteNumberAt(50,  0   + VALUES_Y_OFFSET, false, defaultFloat, false); // LV Voltage   
+    Display_WriteNumberAt(355, 0   + VALUES_Y_OFFSET, false, defaultFloat, false); // Last Lap Time  
+    Display_WriteNumberAt(655, 0   + VALUES_Y_OFFSET, false, defaultFloat, false); // Pack Voltage 
+    Display_WriteNumberAt(50,  120 + VALUES_Y_OFFSET, true, defaultInt, false); // Motor Temp Max + corner
+    Display_WriteTextAt(  90,  120 + VALUES_Y_OFFSET, defaultString);
+    Display_WriteNumberAt(355, 120 + VALUES_Y_OFFSET, false, defaultFloat, false); // Pack % 
+    Display_WriteNumberAt(690, 120 + VALUES_Y_OFFSET, true, defaultInt, false); // Rotor Temp
+    Display_WriteNumberAt(50,  240 + VALUES_Y_OFFSET, true, defaultInt, false); // Inverter temp max + corner
+    Display_WriteTextAt(  90,  240 + VALUES_Y_OFFSET, defaultString);
+    Display_WriteNumberAt(390, 240 + VALUES_Y_OFFSET, true, defaultInt, false); // Lap Num
+    Display_WriteNumberAt(690, 240 + VALUES_Y_OFFSET, true, defaultInt, false); // Torque Limit
+    Display_WriteNumberAt(20,  360 + VALUES_Y_OFFSET, true, defaultInt, false); // Min Cell V + index
+    Display_WriteTextAt(  40,  360 + VALUES_Y_OFFSET, ",i="); 
+    Display_WriteNumberAt(120, 360 + VALUES_Y_OFFSET, true, defaultInt, false); 
+    Display_WriteNumberAt(220, 360 + VALUES_Y_OFFSET, true, defaultInt, false); // Peak Cell T + index
+    Display_WriteTextAt(  240, 360 + VALUES_Y_OFFSET, ",i="); 
+    Display_WriteNumberAt(320, 360 + VALUES_Y_OFFSET, true, defaultInt, false); 
+    Display_WriteNumberAt(455, 360 + VALUES_Y_OFFSET, false, defaultFloat, false); // Front Brake Pressure
+    Display_WriteNumberAt(640, 360 + VALUES_Y_OFFSET, true, defaultInt, false); // TC Mode
+    Display_WriteNumberAt(740, 360 + VALUES_Y_OFFSET, true, defaultInt, false); // TV Balance
+}
+/*
+DISABLE COMIC SANS:
 static void Display_PrerenderDebugRTDLabels(void) 
 {
     Display_ResetState();
@@ -403,6 +495,7 @@ static void Display_UsePrerenderedDebugRTD()
     Display_WriteNumberAt(640, 360 + VALUES_Y_OFFSET, true, defaultInt, false); // TC Mode
     Display_WriteNumberAt(740, 360 + VALUES_Y_OFFSET, true, defaultInt, false); // TV Balance
 }
+*/
 
 static void Display_Warn() 
 {
@@ -410,8 +503,7 @@ static void Display_Warn()
     Display_EnableDrawMode();
     Display_DrawRect(0, 0, 800, 480, COLOR_RED, true);
     vTaskDelay(pdMS_TO_TICKS(DEFAULT_DELAY));
-    Display_EnableTextModeAndFont(DISPLAY_FONT_INTERNAL);
-    Display_InternalFontSize(FONT_SIZE_QUADRUPLE);
+    Display_EnableTextModeAndFont(DISPLAY_FONT_INTERNAL, FONT_SIZE_QUADRUPLE);
     Display_ForegroundWhite();
     Display_WriteTextAt(290, 200, "WARNING");
 }
@@ -427,8 +519,8 @@ void Display_Init(void)
     RA8875_clear(&lcd);
     RA8875_set_backlight_brightness(&lcd, LCD_BRIGHTNESS_100_PCT); 
     Display_SetTextCursor(0, 0);
-    Display_PrecomputeGlyphs();
-    Display_PrerenderDebugRTDLabels();
+    // DISABLE COMIC SANS: Display_PrecomputeGlyphs();
+    // DISABLE COMIC SANS: Display_PrerenderDebugRTDLabels();
     Display_SwitchScreen(SCREEN_DEBUG_NO_RTD);
 }
 
@@ -440,19 +532,27 @@ void Display_EnableDrawMode(void)
     }
 }
 
-void Display_EnableTextModeAndFont(DisplayFont_t fontType) 
+// Internal font size is set here but you can also use Display_InternalFontSize() to change internal font size
+void Display_EnableTextModeAndFont(DisplayFont_t fontType, uint8_t size) 
 {
     currentFont = fontType;
     if (fontType == DISPLAY_FONT_INTERNAL) {
         if(inGraphicMode) {
             RA8875_write_register(&lcd, RA8875_REG_MODE_CTRL, RA8875_VAL_MODE_TEXT); // Switch to text mode
+            inGraphicMode = false;
         }
 
         Display_ForegroundWhite();
-        Display_InternalFontSize(FONT_SIZE_TRIPLE);
-    } else if (fontType == DISPLAY_FONT_COMIC_SANS) {
+        Display_InternalFontSize(size);
+    } else {
+        printf("Comic Sans font disabled. Why aren't you in internal font mode pal.\n");
+    }
+    // DISABLE COMIC SANS:
+    /*
+    else if (fontType == DISPLAY_FONT_COMIC_SANS) {
         Display_EnableDrawMode(); // We write comic sans as graphical drawings
     }
+    */
 }
 
 void Display_DrawRect(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint8_t color, bool filled) 
@@ -469,7 +569,12 @@ void Display_WriteTextAt(uint16_t x, uint16_t y, const char* msg)
         while (*msg) {
             RA8875_write_data(&lcd, (uint8_t)*msg++);
         }
-    } else if (currentFont == DISPLAY_FONT_COMIC_SANS) {
+    } else {
+        printf("Comic Sans font disabled. Why aren't you in internal font mode pal.\n");
+    }
+    /*
+    DISABLE COMIC SANS: 
+     else if (currentFont == DISPLAY_FONT_COMIC_SANS) {
         uint16_t cursorX = x;
 
         while (*msg) {
@@ -482,6 +587,7 @@ void Display_WriteTextAt(uint16_t x, uint16_t y, const char* msg)
             }
         }
     }
+        */
 }
 
 void Display_WriteNumberAt(uint16_t x, uint16_t y, bool isWholeNumber, float value, bool hasManyDigits) 
@@ -514,7 +620,8 @@ void Display_SwitchScreen(Screen_t nextScreen)
             Display_RenderStaticDebugScreen();
             break;
         case SCREEN_DEBUG_RTD:
-            Display_UsePrerenderedDebugRTD();
+            // DISABLE COMIC SANS: Display_UsePrerenderedDebugRTD();
+            Display_RenderRTDDebugScreen();
             break;
         case SCREEN_WARN:
             Display_Warn();

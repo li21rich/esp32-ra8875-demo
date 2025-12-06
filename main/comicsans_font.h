@@ -1,10 +1,12 @@
-/**
+// COMMENTED EVERYTHING (DISABLE COMIC SANS FONT USAGE)
+
+/** 
  * Comic Sans font data for RA8875 (RAM rendering)
  * Generated from BitFontMaker2 JSON
  * Format: 8x16 pixels per character, 16 bytes per glyph
- */
+ 
 
-#pragma once
+ #pragma once
 
 #include <stdint.h>
 
@@ -539,3 +541,4 @@ static const Glyph8x16* glyphs[256] = {
     [121] = &glyph_121,  // 'y'
     [122] = &glyph_122,  // 'z'
 };
+*/

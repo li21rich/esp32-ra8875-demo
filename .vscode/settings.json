@@ -5,7 +5,7 @@
   "idf.openOcdConfigs": [
     "board/esp32s3-builtin.cfg"
   ],
-  "idf.portWin": "COM8",
+  "idf.portWin": "COM3",
   "idf.toolsPathWin": "C:\\Users\\richa\\.espressif",
   "idf.customExtraVars": {
     "IDF_TARGET": "esp32s3"

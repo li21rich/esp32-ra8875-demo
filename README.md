@@ -2,7 +2,7 @@
 
 Repository for Formula SAE steering wheel display firmware, intended for ESP32-S3-WROOM-1 microcontroller and Adafruit RA8875 display board.
 
-Demo including:
+Full demo (excluding CAN data acquisition) including:
 - Display initialization,
 - Custom fonts and graphics, 
 - & Interrupt and fault handling with two buttons toggling between non-RTD and RTD Debug and Main screens,
