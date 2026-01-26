@@ -1,4 +1,4 @@
-# ESP32 RA8875 Steering Wheel Display
+## ESP32 RA8875 Steering Wheel Display
 
 Firmware for Formula SAE's new live steering wheel display system with the ESP32-S3-WROOM-1 microcontroller and RA8875 display board.
 
