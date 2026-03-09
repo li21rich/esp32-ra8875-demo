@@ -10,13 +10,13 @@
 
 // LCD SPI configuration and pin assignments  
 #define LCD_SPI_HOST              SPI3_HOST
-#define LCD_SPI_SPEED             180000 // 115.2k stable, 170k effective, 190k to 2.8m unstable
-#define LCD_PIN_MOSI              13
-#define LCD_PIN_MISO              12
-#define LCD_PIN_SCLK              11
-#define LCD_PIN_CS                6
-#define LCD_PIN_RESET             5      // Pin unused.
-#define LCD_PIN_INT               4
+#define LCD_SPI_SPEED             180000 // 115.2k stable, 170k effective, 190k to 2.8m unstable ** maybe increase?
+#define LCD_PIN_SCLK              11     // ** 37
+#define LCD_PIN_MOSI              13     // ** 38 
+#define LCD_PIN_MISO              12     // ** 39
+#define LCD_PIN_CS                6      // ** 40
+#define LCD_PIN_RESET             5      // Pin unused. ** 42
+#define LCD_PIN_INT               4      // ** ?
 
 // Horizontal and vertical sync + display resolution
 #define LCD_HSYNC_NONDISP         26

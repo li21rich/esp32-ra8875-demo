@@ -43,5 +43,6 @@
     "tuple": "c",
     "type_traits": "c",
     "utility": "c"
-  }
+  },
+  "idf.currentSetup": "C:\\Users\\richa\\esp\\v5.5.1\\esp-idf"
 }
