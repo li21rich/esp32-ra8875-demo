@@ -16,7 +16,7 @@
 #define LCD_PIN_MISO              12     // ** 39
 #define LCD_PIN_CS                6      // ** 40
 #define LCD_PIN_RESET             5      // Pin unused. ** 42
-#define LCD_PIN_INT               4      // ** ?
+#define LCD_PIN_INT               4      // ** ??
 
 // Horizontal and vertical sync + display resolution
 #define LCD_HSYNC_NONDISP         26
